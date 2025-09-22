@@ -1,10 +1,14 @@
 // backend code 
-const http = require("http");
+const express = require("express");
 const fs = require("fs");
 const mime = require("mime");
-const url = require("url");
-const dir = "public/";
-const port = 3000;
+const path = require("path");
+
+const app = express();
+const dir = "public";
+const port = process.env.PORT || 3000;
+
+app.use(express.json());
 
 let nextId = 1;
 let appdata = [
@@ -59,39 +63,24 @@ function seed(row) {
   };
 }
 
-const server = http.createServer((request, response) => {
-  const parsed = url.parse(request.url, true);
-  const pathname = parsed.pathname;
+// api routing 
 
-  if (request.method === "GET") {
-    if (pathname === "/todos") return getTodos(response);
-    return handleStaticGet(request, response);
-  }
-
-  if (request.method === "POST" && pathname === "/todos")
-    return readBodyJSON(request, response, addTodo);
-
-  if (request.method === "PUT" && pathname === "/todos")
-    return readBodyJSON(request, response, updateTodo);
-
-  if (request.method === "DELETE" && pathname === "/todos")
-    return readBodyJSON(request, response, deleteTodo);
-
-  response.writeHead(404, { "Content-Type": "text/plain" });
-  response.end("404 Not Found");
+//get todos
+app.get("/todos", (req, res) => {
+  const out = appdata.map(withDerived);
+  res.json(out);
 });
 
-function getTodos(response) {
-  const out = appdata.map(withDerived);
-  sendJSON(response, 200, out);
-}
-
-function addTodo(body, response) {
+//post todos
+app.post("/todos", (req, res) => {
+  const body = req.body;
   const task = (body.task ?? "").toString().trim();
   const creation_date = body.creation_date ?? Date.now();
   const due_date = body.due_date ?? null;
-
-  if (!task) return badRequest(response, "Task is required");
+  
+  if (!task) {
+    return res.status(400).json({ error: "Task is required" });
+  }
 
   const row = seed({
     task,
@@ -99,98 +88,64 @@ function addTodo(body, response) {
     due_date,
     completed: false,
   });
-
+  
   appdata.push(row);
+  res.json(appdata.map(withDerived));
 
-  const out = appdata.map(withDerived);
-  sendJSON(response, 200, out);
-}
+});
 
-function updateTodo(body, response) {
+// put update todos
+app.put("/todos", (req, res) => {
+  const body = req.body;
   const id = body.id != null ? String(body.id) : null;
-  if (!id) return badRequest(response, "id is required");
+  if (!id) {
+    return res.status(400).json({ error: "ID is required" });
+  }
 
-  const idx = appdata.findIndex((t) => t.id === id);
-  if (idx === -1) return notFound(response, "Todo not found");
+  const index = appdata.findIndex((r) => r.id === id);
+  if (index === -1) {
+    return res.status(404).json({ error: `No todo with ID ${id}` });
+  }
 
-  const current = appdata[idx];
+  const current = appdata[index];
 
   const updates = {};
   if ("task" in body) updates.task = String(body.task ?? "").trim();
   if ("creation_date" in body) updates.creation_date = body.creation_date;
-  if ("due_date" in body) updates.due_date = body.due_date ?? null;
+  if ("due_date" in body) updates.due_date = body.due_date ?? null; 
   if ("completed" in body) updates.completed = !!body.completed;
 
   const updated = { ...current, ...updates };
-  appdata[idx] = updated;
+  appdata[index] = updated;
 
-  const out = appdata.map(withDerived);
-  sendJSON(response, 200, out);
-}
+  res.json(appdata.map(withDerived));
+});
 
-function deleteTodo(body, response) {
+//delete todos
+app.delete("/todos", (req, res) => {
+  const body = req.body;
   const id = body.id != null ? String(body.id) : null;
-  if (!id) return badRequest(response, "id is required");
+  if (!id) {
+    return res.status(400).json({ error: "ID is required" });
+  }
 
   const before = appdata.length;
-  appdata = appdata.filter((t) => t.id !== id);
+  appdata = appdata.filter((r) => r.id !== id);
+  if (appdata.length === before) {
+    return res.status(404).json({ error: `No todo with ID ${id}` });
+  }
 
-  if (appdata.length === before) return notFound(response, "Todo not found");
+  res.json(appdata.map(withDerived));
+});
 
-  const out = appdata.map(withDerived);
-  sendJSON(response, 200, out);
-}
+//static file serving
+app.use(express.static(path.join(__dirname, dir)));
 
-function handleStaticGet(request, response) {
-  const filename = dir + (request.url === "/" ? "index.html" : request.url.slice(1));
-  sendFile(response, filename);
-}
-
-function sendFile(response, filename) {
-  const type = mime.getType(filename) || "application/octet-stream";
-  fs.readFile(filename, (err, content) => {
-    if (err == null) {
-      response.writeHead(200, { "Content-Type": type });
-      response.end(content);
-    } else {
-      response.writeHead(404, { "Content-Type": "text/plain" });
-      response.end("404 Error: File Not Found");
-    }
-  });
-}
-
-function readBodyJSON(request, response, handler) {
-  let dataString = "";
-  request.on("data", (chunk) => (dataString += chunk));
-  request.on("end", () => {
-    let body = {};
-    if (dataString.trim() !== "") {
-      try {
-        body = JSON.parse(dataString);
-      } catch (e) {
-        return badRequest(response, "Invalid JSON body");
-      }
-    }
-    handler(body, response);
-  });
-}
-
-function sendJSON(response, code, obj) {
-  response.writeHead(code, { "Content-Type": "application/json" });
-  response.end(JSON.stringify(obj));
-}
-
-function badRequest(response, msg) {
-  response.writeHead(400, { "Content-Type": "application/json" });
-  response.end(JSON.stringify({ error: msg }));
-}
-
-function notFound(response, msg) {
-  response.writeHead(404, { "Content-Type": "application/json" });
-  response.end(JSON.stringify({ error: msg }));
-}
+app.use((req, res) => {
+  res.status(404).send("404 Not Found");
+});
 
 //makes it easier to click location of the port when running server.
-server.listen(process.env.PORT || port, () => {
-  console.log(`Server running on http://localhost:${process.env.PORT || port}`);
+app.listen(port, () => {
+  console.log(`Server listening on http://localhost:${port}`);
 });
