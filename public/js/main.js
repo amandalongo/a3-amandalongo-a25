@@ -44,6 +44,7 @@ const el = {
   emptyImage: document.querySelector(".empty-image"),
   count: document.getElementById("count"),
   progress: document.getElementById("progress"),
+  logoutBtn: document.getElementById("logout-btn"),
 };
 
 //clock at the top of the ui
@@ -67,7 +68,7 @@ function formatDateISO(d) {
   }
 }
 
-// Compute days until due date (null if no due date) account for 11:59 date due
+// compute days until due date (null if no due date) account for 11:59 date due
 function labelForDays(n) {
   if (n == null) return "";
   if (n > 1) return `Due in ${n} days`;
@@ -86,7 +87,7 @@ function renderTodos() {
     el.emptyImage.style.display = "none";
   }
 
-  // Sort by date: incomplete first, then earliest due date, then creation time
+  // sort by date: incomplete first, then earliest due date, then creation time
   const sorted = [...todos].sort((a, b) => {
     if (a.completed !== b.completed) return a.completed - b.completed; // incomplete first
     const ad = a.due_date ? new Date(a.due_date).getTime() : Infinity;
@@ -98,41 +99,46 @@ function renderTodos() {
   for (const t of sorted) {
     const li = document.createElement("li");
     li.dataset.id = t.id;
+    // layout: checkbox | centered text | buttons
+    li.className = "flex items-center justify-between bg-white/30 mb-2 p-3 rounded-2xl text-white";
 
-    //checkbox
+    // checkbox
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
-    checkbox.className = "checkbox";
+    // keep the 'checkbox' class for existing event selection, add tailwind sizing
+    checkbox.className = "checkbox h-5 w-5 rounded-full border-2 border-white/30 bg-transparent appearance-none cursor-pointer transition-all";
     checkbox.checked = !!t.completed;
 
     const textWrap = document.createElement("span");
     const dueStr = t.due_date ? formatDateISO(t.due_date) : "";
     const derived = labelForDays(t.days_until_due);
 
+    // center the task text while allowing meta below it
+    textWrap.className = "flex-1 text-center mx-3";
     textWrap.innerHTML = `
       <span class="task-text" ${
         t.completed ? 'style="text-decoration: line-through; opacity:0.7;"' : ""
       }>
         ${escapeHTML(t.task)}
       </span>
-      <small style="display:block; font-size:11px; opacity:0.95; margin-top:2px; font-family: 'Roboto', sans-serif;">
+      <small class="block text-[11px] opacity-95 mt-1 font-roboto">
         ${dueStr ? `Due: ${dueStr}` : ""}
         ${dueStr && derived ? ` • ${escapeHTML(derived)}` : `${derived}`}
       </small>
     `;
 
     // Buttons
-    const btnWrap = document.createElement("div");
-    btnWrap.className = "task-buttons";
+  const btnWrap = document.createElement("div");
+  btnWrap.className = "task-buttons flex gap-2";
     const editBtn = document.createElement("button");
     editBtn.className = "edit";
     editBtn.title = "Edit";
-    editBtn.innerHTML = `<i class="fa-solid fa-pen"></i>`;
+    editBtn.innerHTML = `<i class="hover:cursor-pointer fa-solid fa-pen"></i>`;
 
     const delBtn = document.createElement("button");
     delBtn.className = "delete";
     delBtn.title = "Delete";
-    delBtn.innerHTML = `<i class="fa-solid fa-trash"></i>`;
+    delBtn.innerHTML = `<i class="hover:cursor-pointer fa-solid fa-trash"></i>`;
 
     btnWrap.append(editBtn, delBtn);
 
@@ -155,7 +161,7 @@ function updateStats() {
   }
 }
 
-// Celebration confetti when all tasks are completed
+// celebration confetti when all tasks are completed
 function celebrate() {
   const COUNT = 120;
   for (let i = 0; i < COUNT; i++) {
@@ -222,13 +228,13 @@ el.form.addEventListener("submit", async (evt) => {
   }
 });
 
-// Toggle / Edit / Delete handlers
+// toggle / edit / delete handlers
 el.list.addEventListener("click", async (evt) => {
   const li = evt.target.closest("li");
   if (!li) return;
   const id = li.dataset.id;
 
-  // Toggle complete
+  // toggle complete
   if (evt.target.closest("input.checkbox")) {
   const cb = evt.target.closest("input.checkbox");
   const checked = cb.checked;
@@ -242,13 +248,13 @@ el.list.addEventListener("click", async (evt) => {
   return;
 }
 
-  // Edit
+  // edit
   if (evt.target.closest("button")?.classList.contains("edit")) {
     startInlineEdit(li, id);
     return;
   }
 
-  // Delete
+  // delete
   if (evt.target.closest("button")?.classList.contains("delete")) {
     try {
       todos = await API.remove(id);
@@ -260,7 +266,7 @@ el.list.addEventListener("click", async (evt) => {
   }
 });
 
-// Edit task, due date
+// edit task, due date
 function startInlineEdit(li, id) {
   const item = todos.find((t) => String(t.id) === String(id));
   if (!item) return;
@@ -301,16 +307,16 @@ function startInlineEdit(li, id) {
   editDue.style.background = "rgba(255, 126, 183, 0.3)";
   editDue.style.color = "#fff";
 
-  // Save and cancel buttons
+  // save and cancel buttons
   const saveBtn = document.createElement("button");
   saveBtn.className = "edit";
   saveBtn.title = "Save";
-  saveBtn.innerHTML = `<i class="fa-solid fa-check"></i>`;
+  saveBtn.innerHTML = `<i class="hover:cursor-pointer fa-solid fa-check"></i>`;
 
   const cancelBtn = document.createElement("button");
   cancelBtn.className = "cancel";
   cancelBtn.title = "Cancel";
-  cancelBtn.innerHTML = `<i class="fa-solid fa-xmark"></i>`;
+  cancelBtn.innerHTML = `<i class="hover:cursor-pointer fa-solid fa-xmark"></i>`;
 
   textSpan.replaceWith(editInput);
   metaSmall.replaceWith(editDue);
@@ -359,8 +365,29 @@ function startInlineEdit(li, id) {
   });
 }
 
-// Initial load
+async function handleLogout(e) {
+  e.preventDefault();
+  const btn = e.currentTarget;
+  btn.disabled = true;
+  btn.classList.add("opacity-60", "pointer-events-none");
+
+  try {
+    await fetch("/logout", { method: "POST", credentials: "same-origin" });
+  } catch (err) {
+    console.error("Logout failed:", err);
+  } finally {
+    // fetch follows redirects but won’t navigate the page — do it manually.
+    window.location.href = "/login.html?loggedout=1";
+  }
+}
+
+// initial load
 window.addEventListener("DOMContentLoaded", () => {
   startClock();
   loadAndRender();
+
+  const btn = el.logoutBtn || document.getElementById("logout-btn");
+  if (btn) btn.addEventListener("click", handleLogout);
 });
+
+

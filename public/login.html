@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login • To-Do List</title>
+
+    <link rel="icon" href="./css/images/favicon.ico" type="image/x-icon" />
+    <!-- Tailwind (built output) -->
+    <link rel="stylesheet" href="./css/tailwind.css" />
+
+    <!-- Google Fonts for your font utilities -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+
+  <body
+    class="min-h-screen bg-[url('/css/images/todoappbackground.png')] bg-cover bg-center flex items-center justify-center font-pixelify text-lg"
+  >
+    <main class="w-full">
+      <div class="w-full flex items-center justify-center px-5">
+        <div
+          class="w-full max-w-md p-8 flex flex-col items-center gap-5 text-white rounded-2xl border-2 border-white/20 backdrop-blur shadow-2xl bg-white/10"
+        >
+          <h1 class="text-4xl">Welcome</h1>
+
+          <p class="font-roboto text-base text-white/90 -mt-1 text-center">
+            Sign in with GitHub to see your tasks.
+          </p>
+
+          <div class="flex justify-center my-1">
+            <a
+              class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-white/20 bg-black/70 hover:bg-black/85 transition font-roboto font-semibold"
+              href="/auth/github"
+            >
+              <i class="fa-brands fa-github text-xl"></i>
+              Continue with GitHub
+            </a>
+          </div>
+
+          <p class="font-roboto text-sm text-white/90 text-center">
+            <i class="fa-solid fa-circle-info mr-1"></i>
+            If this is your first time, a new account will be
+            <strong>automatically created</strong> for you.
+          </p>
+
+          <p
+            id="status"
+            class="font-roboto text-sm min-h-[20px] text-center"
+            aria-live="polite"
+          ></p>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const p = new URLSearchParams(location.search);
+      const status = document.getElementById("status");
+      if (p.get("error") === "oauth") {
+        status.textContent = "Login failed. Please try again.";
+        status.classList.add("text-red-300");
+      } else if (p.get("loggedout") === "1") {
+        status.textContent = "You have been logged out.";
+        status.classList.add("text-green-300");
+      }
+    </script>
+  </body>
+</html>

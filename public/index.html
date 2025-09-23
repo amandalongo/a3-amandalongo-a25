@@ -4,8 +4,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>To-Do List</title>
+
     <link rel="icon" href="./css/images/favicon.ico" type="image/x-icon" />
-    <script src="js/main.js" defer></script>
+
+    <link rel="stylesheet" href="./css/tailwind.css" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -16,47 +19,89 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
-    <link rel="stylesheet" href="css/main.css" />
+    <script src="./js/main.js" defer></script>
   </head>
 
-  <body>
-    <main>
-      <div class="container">
-        <div class="todo-app">
-          <h1>To-Do List</h1>
-          <!-- Today's date will be inserted here by JavaScript -->
-          <div id="today" class="today"></div>
+  <body
+    class="min-h-screen bg-[url('/css/images/todoappbackground.png')] bg-cover bg-center flex items-center justify-center font-pixelify text-lg"
+  >
+    <main class="w-full">
+      <div class="w-full flex items-center justify-center px-5">
+        <div
+          class="relative w-full max-w-md p-8 flex flex-col items-center gap-7 text-white rounded-2xl border-2 border-white/20 backdrop-blur shadow-2xl bg-white/10"
+        >
+         <!-- logout -->
+          <button
+            id="logout-btn"
+            class="hover:cursor-pointer absolute top-3 right-3 inline-flex items-center justify-center w-9 h-9 rounded-full border-2 border-white/20 bg-white/30 hover:bg-white/40 transition"
+            title="Log out"
+          >
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
 
-          <!-- Progress bar and task count -->
-          <div class="stats">
-            <div class="details">
-              <h3>yay you got this!</h3>
-              <div id="progress-bar">
-                <div id="progress"></div>
+          <h1 class="text-4xl">To-Do List</h1>
+
+          <!-- today's date -->
+          <div id="today" class="text-white/100 text-xl"></div>
+
+          <!-- progress + count -->
+          <div
+            class="w-full flex items-center justify-between gap-5 p-4 rounded-xl border-2 border-white/20"
+          >
+            <div class="w-full">
+              <h2 class="text-white text-2xl">yay you got this!</h2>
+              <div class="w-full h-[7px] bg-white/30 rounded-2xl mt-4">
+                <div
+                  id="progress"
+                  class="h-full rounded-2xl transition-[width] duration-300"
+                  style="width:0%; background:#ff7eb7"
+                ></div>
               </div>
             </div>
-            <div class="stats-count">
-              <p id="count">0/0</p>
+            <div
+              id="count"
+              class="flex-none flex items-center justify-center w-20 aspect-square text-2xl rounded-full border-2 border-white/20"
+              style="background:#ff7eb7"
+            >
+              0/0
             </div>
           </div>
 
-          <!-- Add task form -->
-          <form class="add-task-form">
+          <!-- add task form -->
+          <form class="add-task-form flex items-center gap-2">
             <input
               type="text"
               id="task-input"
               placeholder="add a new task..."
+              class="flex-1 px-3 py-2 rounded-full bg-[rgba(142,104,230,0.25)] text-white placeholder-white/80 outline-none text-sm font-roboto"
             />
-              <input type="date" id="due-date-input"/>
-            <button type="submit" id="add-task-button">
+            <input
+              type="date"
+              id="due-date-input"
+              class="hover:cursor-pointer px-3 py-2 rounded-full bg-[rgba(142,104,230,0.25)] text-white outline-none text-sm font-roboto"
+            />
+            <button
+              type="submit"
+              id="add-task-button"
+              class="hover:cursor-pointer inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-white/20 bg-[rgba(142,104,230,0.25)] hover:bg-[rgba(142,104,230,0.4)] hover:scale-110 transition"
+              title="Add"
+            >
               <i class="fa-solid fa-plus"></i>
             </button>
           </form>
-          <!-- Task list -->
-          <div class="todo-container">
-            <ul id="task-list"></ul>
-            <img class="empty-image" src="./css/images/empty.png" alt="empty" />
+
+          <!-- task list -->
+          <div class="w-full flex items-center justify-center">
+            <ul id="task-list" class="w-full space-y-2"></ul>
           </div>
+
+          <!-- no todos in list -->
+          <img
+            class="empty-image w-[190px] h-auto mx-auto"
+            style="display:none"
+            src="/css/images/empty.png"
+            alt="empty"
+          />
         </div>
       </div>
     </main>

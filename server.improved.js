@@ -1,4 +1,9 @@
 // backend code
+// GitHub OAuth setup
+const session = require("express-session");
+const passport = require("passport");
+const GitHubStrategy = require("passport-github2").Strategy;
+
 require("dotenv").config();
 const express = require("express");
 const path = require("path");
@@ -14,7 +19,94 @@ const uri = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017";
 const dbName = process.env.MONGODB_DB || "todosdb";
 const collName = process.env.MONGODB_COLLECTION || "todos";
 
-let db, todos;
+let db, todos, users;
+
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
+
+app.use(
+  session({
+    name: "sid",
+    secret: process.env.SESSION_SECRET || "dev-only-secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    },
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser((user, done) => {
+  done(null, { githubId: user.githubId, username: user.username || "" });
+});
+
+passport.deserializeUser(async (sessionUser, done) => {
+  try {
+    const u = await users.findOne({ githubId: sessionUser.githubId });
+    done(null, u || sessionUser);
+  } catch (e) {
+    done(e);
+  }
+});
+
+const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
+const callbackURL =
+  process.env.GITHUB_CALLBACK_URL || `${baseUrl}/auth/github/callback`;
+
+passport.use(
+  new GitHubStrategy(
+    {
+      clientID: process.env.GITHUB_CLIENT_ID || "",
+      clientSecret: process.env.GITHUB_CLIENT_SECRET || "",
+      callbackURL,
+      scope: ["read:user"],
+    },
+    async (_accessToken, _refreshToken, profile, done) => {
+      try {
+        const githubId = String(profile.id);
+        let user = await users.findOne({ githubId });
+        if (!user) {
+          // create on first login
+          user = {
+            githubId,
+            username: profile.username || "",
+            displayName: profile.displayName || "",
+            avatar: profile.photos?.[0]?.value || "",
+            createdAt: new Date(),
+          };
+          await users.insertOne(user);
+        } else {
+          await users.updateOne(
+            { _id: user._id },
+            {
+              $set: {
+                username: profile.username || user.username,
+                displayName: profile.displayName || user.displayName,
+                avatar: profile.photos?.[0]?.value || user.avatar,
+              },
+            }
+          );
+        }
+        done(null, { githubId, username: user.username });
+      } catch (err) {
+        done(err);
+      }
+    }
+  )
+);
+
+// require login for API routes
+function ensureAuthed(req, res, next) {
+  if (req.isAuthenticated && req.isAuthenticated()) return next();
+  return res.status(401).json({ error: "Unauthorized" });
+}
 
 // helpers
 function computeDaysUntilDue(due_date) {
@@ -65,47 +157,90 @@ function normalizeCreationDate(input) {
   return isNaN(d.getTime()) ? new Date() : d;
 }
 
-async function fetchAllWithDerived() {
-  const docs = await todos.find({}).sort({ creation_date: 1 }).toArray();
+async function fetchAllWithDerived(ownerId) {
+  const docs = await todos
+    .find({ ownerId })
+    .sort({ creation_date: 1 })
+    .toArray();
   return docs.map(toApiRow);
 }
 
-const router = express.Router();
+const isValidObjectId = (s) => typeof s === "string" && /^[a-fA-F0-9]{24}$/.test(s);
 
-// GET 
-router.get("/", async (_req, res) => {
+//routes
+app.get("/auth/github", passport.authenticate("github"));
+
+app.get(
+  "/auth/github/callback",
+  passport.authenticate("github", {
+    failureRedirect: "/login.html?error=oauth",
+  }),
+  (_req, res) => {
+    res.redirect("/");
+  }
+);
+
+app.post("/logout", (req, res, next) => {
+  req.logout((err) => {
+    if (err) return next(err);
+    req.session.destroy(() => res.redirect("/login.html?loggedout=1"));
+  });
+});
+
+
+app.get("/", (req, res) => {
+  if (req.isAuthenticated && req.isAuthenticated()) {
+    return res.sendFile(path.join(__dirname, dir, "index.html"));
+    }
+  return res.sendFile(path.join(__dirname, dir, "login.html"));
+});
+
+
+const router = express.Router();
+router.use(ensureAuthed);
+
+// GET
+router.get("/", async (req, res) => {
   try {
-    res.json(await fetchAllWithDerived());
+    res.json(await fetchAllWithDerived(req.user.githubId));
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Failed to fetch todos" });
   }
 });
 
-// POST 
+// POST
 router.post("/", async (req, res) => {
   try {
     const body = req.body || {};
     const task = (body.task ?? "").toString().trim();
     const creation_date = normalizeCreationDate(body.creation_date);
     const due_date = normalizeDueDate(body.due_date);
+
     if (!task) return res.status(400).json({ error: "Task is required" });
 
-    await todos.insertOne({ task, creation_date, due_date, completed: false });
-    res.json(await fetchAllWithDerived());
+    await todos.insertOne({
+      ownerId: req.user.githubId,
+      task,
+      creation_date,
+      due_date,
+      completed: false,
+    });
+
+    res.json(await fetchAllWithDerived(req.user.githubId));
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Failed to add todo" });
   }
 });
 
-const isValidObjectId = (s) => typeof s === "string" && /^[a-fA-F0-9]{24}$/.test(s);
-
-// PUT 
+// PUT
 router.put("/:id", async (req, res) => {
   try {
     const rawId = req.params.id;
-    if (!isValidObjectId(rawId)) return res.status(400).json({ error: "Invalid ID format" });
+    if (!isValidObjectId(rawId)) {
+      return res.status(400).json({ error: "Invalid ID format" });
+    }
 
     const updates = {};
     const body = req.body || {};
@@ -114,26 +249,38 @@ router.put("/:id", async (req, res) => {
     if ("due_date" in body) updates.due_date = normalizeDueDate(body.due_date);
     if ("completed" in body) updates.completed = !!body.completed;
 
-    const r = await todos.updateOne({ _id: new ObjectId(rawId) }, { $set: updates });
-    if (r.matchedCount === 0) return res.status(404).json({ error: `No todo with ID ${rawId}` });
+    const r = await todos.updateOne(
+      { _id: new ObjectId(rawId), ownerId: req.user.githubId },
+      { $set: updates }
+    );
+    if (r.matchedCount === 0) {
+      return res.status(404).json({ error: `No todo with ID ${rawId}` });
+    }
 
-    res.json(await fetchAllWithDerived());
+    res.json(await fetchAllWithDerived(req.user.githubId));
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Failed to update todo" });
   }
 });
 
-// DELETE 
+// DELETE /todos/:id
 router.delete("/:id", async (req, res) => {
   try {
     const rawId = req.params.id;
-    if (!isValidObjectId(rawId)) return res.status(400).json({ error: "Invalid ID format" });
+    if (!isValidObjectId(rawId)) {
+      return res.status(400).json({ error: "Invalid ID format" });
+    }
 
-    const r = await todos.deleteOne({ _id: new ObjectId(rawId) });
-    if (r.deletedCount === 0) return res.status(404).json({ error: `No todo with ID ${rawId}` });
+    const r = await todos.deleteOne({
+      _id: new ObjectId(rawId),
+      ownerId: req.user.githubId,
+    });
+    if (r.deletedCount === 0) {
+      return res.status(404).json({ error: `No todo with ID ${rawId}` });
+    }
 
-    res.json(await fetchAllWithDerived());
+    res.json(await fetchAllWithDerived(req.user.githubId));
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Failed to delete todo" });
@@ -142,34 +289,22 @@ router.delete("/:id", async (req, res) => {
 
 app.use("/todos", router);
 
-// static and 404 stay after this line
 app.use(express.static(path.join(__dirname, dir)));
 app.use((_req, res) => res.status(404).send("404 Not Found"));
 
-
-// start server after db init
 (async function initDBAndStart() {
   try {
     const client = new MongoClient(uri, { ignoreUndefined: true });
     await client.connect();
     db = client.db(dbName);
     todos = db.collection(collName);
-    console.log("Connected to MongoDB");
+    users = db.collection("users");
 
-    // seed once if empty
-    const count = await todos.countDocuments();
-    if (count === 0) {
-      await todos.insertOne({
-        task: "Assignment 3",
-        creation_date: new Date(),
-        due_date: new Date("2025-09-15"), // ISO-safe
-        completed: false,
-      });
-      console.log("Seeded initial todo");
-    }
+    await todos.createIndex({ ownerId: 1, creation_date: 1 });
 
     app.listen(port, () => {
-      console.log(`Server listening on http://localhost:${port}`);
+      console.log(`Server listening on ${baseUrl}`);
+      console.log(`GitHub callback: ${callbackURL}`);
     });
   } catch (e) {
     console.error("Failed to connect to MongoDB", e);
