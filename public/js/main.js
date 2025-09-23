@@ -17,20 +17,17 @@ const API = {
     return res.json();
   },
   update: async (payload) => {
-    const res = await fetch("/todos", {
+    const { id, ...patch } = payload;
+    const res = await fetch(`/todos/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(patch),
     });
     if (!res.ok) throw new Error("Failed to update todo");
     return res.json();
   },
   remove: async (id) => {
-    const res = await fetch("/todos", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
+    const res = await fetch(`/todos/${id}`, { method: "DELETE" });
     if (!res.ok) throw new Error("Failed to delete todo");
     return res.json();
   },
@@ -108,7 +105,6 @@ function renderTodos() {
     checkbox.className = "checkbox";
     checkbox.checked = !!t.completed;
 
-   
     const textWrap = document.createElement("span");
     const dueStr = t.due_date ? formatDateISO(t.due_date) : "";
     const derived = labelForDays(t.days_until_due);
@@ -233,16 +229,18 @@ el.list.addEventListener("click", async (evt) => {
   const id = li.dataset.id;
 
   // Toggle complete
-  if (evt.target.classList.contains("checkbox")) {
-    const checked = evt.target.checked;
-    try {
-      todos = await API.update({ id, completed: checked });
-      renderTodos();
-    } catch (e) {
-      console.error(e);
-    }
-    return;
+  if (evt.target.closest("input.checkbox")) {
+  const cb = evt.target.closest("input.checkbox");
+  const checked = cb.checked;
+  try {
+    todos = await API.update({ id, completed: checked }); 
+    renderTodos();
+  } catch (e) {
+    console.error(e);
+    cb.checked = !checked;
   }
+  return;
+}
 
   // Edit
   if (evt.target.closest("button")?.classList.contains("edit")) {
@@ -271,6 +269,11 @@ function startInlineEdit(li, id) {
   const metaSmall = li.querySelector("small");
   const btnWrap = li.querySelector(".task-buttons");
   const checkbox = li.querySelector(".checkbox");
+
+  if (!textSpan || !metaSmall || !btnWrap || !checkbox) {
+    console.warn("Expected DOM nodes missing for id", id);
+    return;
+  }
 
   // editors
   const editInput = document.createElement("input");
