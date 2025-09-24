@@ -1,11 +1,13 @@
 // backend code
 // GitHub OAuth setup
+const envFile = process.env.NODE_ENV === 'production' ? '.env.prod' : '.env.dev';
+require('dotenv').config({ path: envFile });
+console.log('[env] NODE_ENV =', process.env.NODE_ENV, '→ loaded', envFile);
 const session = require("express-session");
 const passport = require("passport");
 const GitHubStrategy = require("passport-github2").Strategy;
 const MongoStore = require("connect-mongo");
 
-require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const { MongoClient, ObjectId } = require("mongodb");

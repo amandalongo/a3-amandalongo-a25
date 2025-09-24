@@ -159,6 +159,7 @@ function renderTodos() {
   }
 
   updateStats();
+  clampListHeightTo3();
 }
 
 function updateStats() {
@@ -170,6 +171,22 @@ function updateStats() {
 
   if (total > 0 && done === total) {
     celebrate();
+  }
+}
+
+function clampListHeightTo3() {
+  const ul = el.list;
+  const items = ul.querySelectorAll('li');
+  if (items.length > 3) {
+    const third = items[2];
+    const height = (third.offsetTop + third.offsetHeight) - ul.offsetTop;
+    ul.style.maxHeight = height + 'px';
+    ul.style.overflowY = 'auto';
+    ul.style.paddingRight = '8px'; 
+  } else {
+    ul.style.maxHeight = '';
+    ul.style.overflowY = '';
+    ul.style.paddingRight = '';
   }
 }
 
