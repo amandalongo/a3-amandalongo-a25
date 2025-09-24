@@ -3,6 +3,7 @@
 const session = require("express-session");
 const passport = require("passport");
 const GitHubStrategy = require("passport-github2").Strategy;
+const MongoStore = require("connect-mongo");
 
 require("dotenv").config();
 const express = require("express");
@@ -25,20 +26,23 @@ if (process.env.NODE_ENV === "production") {
   app.set("trust proxy", 1);
 }
 
-app.use(
-  session({
-    name: "sid",
-    secret: process.env.SESSION_SECRET || "dev-only-secret",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    },
-  })
-);
+app.use(session({
+  name: "sid",
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI,
+    dbName: process.env.MONGODB_DB,
+    ttl: 60 * 60 * 24 * 7,
+  }),
+  cookie: {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  },
+}));
 
 app.use(passport.initialize());
 app.use(passport.session());
