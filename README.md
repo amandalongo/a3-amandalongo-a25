@@ -35,18 +35,18 @@ A clean to-do app with GitHub login: add tasks with due dates, check them off, e
 
 ### Design/Evaluation Achievements
 - **Design Achievement 1**: I followed the following tips from the W3C Web Accessibility Initiative and here is each tip that I followed
-1. Use semantic landmarks : Wrapped the app in <main> and used <form>, <ul>, and <li> for structure.
-2. Text alternatives for icons : Replaced decorative icons with inline SVGs and added clear names (e.g., aria-label="Log out").
-3. Label form fields : Added labels for the task and due date (screen-reader–only).
-4. Label each checkbox : Each checkbox gets a unique id and a matching <label for="..."> using the task text.
-5. Visible keyboard focus : Added a clear :focus-visible outline so keyboard users can see focus.
-6. Respect reduced motion : Confetti animation is disabled when prefers-reduced-motion is enabled.
-7. Announce status updates : Login messages use aria-live="polite" so errors/success are announced.
-8. Larger hit targets : Made interactive controls roughly 44×44px for easier tapping.
-9. Improve color contrast : Ensured high-contrast text/badges; can switch to solid backgrounds if needed.
-10. Sync control state : Keep aria-checked in sync with the checkbox’s checked property.
-11. Descriptive button names : Edit/Delete buttons include the task name in their aria-label (e.g., “Delete ‘Buy milk’”).
-12. Helpful page metadata : Added a concise <meta name="description"> to describe the page.
+      - Use semantic landmarks : Wrapped the app in <main> and used <form>, <ul>, and <li> for structure.
+      - Text alternatives for icons : Replaced decorative icons with inline SVGs and added clear names (e.g., aria-label="Log out").
+      - Label form fields : Added labels for the task and due date (screen-reader–only).
+      - Label each checkbox : Each checkbox gets a unique id and a matching <label for="..."> using the task text.
+      - Visible keyboard focus : Added a clear :focus-visible outline so keyboard users can see focus.
+      - Respect reduced motion : Confetti animation is disabled when prefers-reduced-motion is enabled.
+      - Announce status updates : Login messages use aria-live="polite" so errors/success are announced.
+      - Larger hit targets : Made interactive controls roughly 44×44px for easier tapping.
+      - Improve color contrast : Ensured high-contrast text/badges; can switch to solid backgrounds if needed.
+      - Sync control state : Keep aria-checked in sync with the checkbox’s checked property.
+      - Descriptive button names : Edit/Delete buttons include the task name in their aria-label (e.g., “Delete ‘Buy milk’”).
+      - Helpful page metadata : Added a concise <meta name="description"> to describe the page.
     
 - **Design Achievement 2**: CRAP
     - **Contrast** We use strong contrast to make the right things pop. The bold “To-Do List” title stands out first, then the progress bar and the round count badge. White text sits on a darker, blurred card so it’s easy to read over the photo background. Buttons (Add, Logout, Edit, Delete) have clear shapes, borders, and hover states so they look clickable. The progress bar uses a bright pink fill against a muted track, so progress is obvious at a glance.
