@@ -68,7 +68,7 @@ function formatDateISO(d) {
   }
 }
 
-// compute days until due date (null if no due date) account for 11:59 date due
+// compute days until due date (null if no due date)
 function labelForDays(n) {
   if (n == null) return "";
   if (n > 1) return `Due in ${n} days`;
@@ -99,23 +99,27 @@ function renderTodos() {
   for (const t of sorted) {
     const li = document.createElement("li");
     li.dataset.id = t.id;
-    // layout: checkbox | centered text | buttons
-    li.className = "flex items-center justify-between bg-white/30 mb-2 p-3 rounded-2xl text-white";
+    li.className =
+      "flex items-center justify-between bg-white/30 mb-2 p-3 rounded-2xl text-white";
 
     // checkbox
+    const cbId = `cb-${t.id}`;
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
-    // keep the 'checkbox' class for existing event selection, add tailwind sizing
-    checkbox.className = "checkbox h-5 w-5 rounded-full border-2 border-white/30 bg-transparent appearance-none cursor-pointer transition-all";
+    checkbox.id = cbId;
+    checkbox.className =
+      "checkbox h-5 w-5 rounded-full border-2 border-white/30 bg-transparent appearance-none cursor-pointer transition-all";
     checkbox.checked = !!t.completed;
+    checkbox.setAttribute("aria-checked", String(!!t.completed));
 
-    const textWrap = document.createElement("span");
+    const label = document.createElement("label");
+    label.setAttribute("for", cbId);
+    label.className = "flex-1 text-center mx-3 cursor-pointer";
+
     const dueStr = t.due_date ? formatDateISO(t.due_date) : "";
     const derived = labelForDays(t.days_until_due);
 
-    // center the task text while allowing meta below it
-    textWrap.className = "flex-1 text-center mx-3";
-    textWrap.innerHTML = `
+    label.innerHTML = `
       <span class="task-text" ${
         t.completed ? 'style="text-decoration: line-through; opacity:0.7;"' : ""
       }>
@@ -127,22 +131,30 @@ function renderTodos() {
       </small>
     `;
 
-    // Buttons
-  const btnWrap = document.createElement("div");
-  btnWrap.className = "task-buttons flex gap-2";
+    // buttons
+    const btnWrap = document.createElement("div");
+    btnWrap.className = "task-buttons flex gap-2";
+
     const editBtn = document.createElement("button");
     editBtn.className = "edit";
     editBtn.title = "Edit";
-    editBtn.innerHTML = `<i class="hover:cursor-pointer fa-solid fa-pen"></i>`;
+    editBtn.setAttribute("aria-label", `Edit "${t.task}"`);
+    editBtn.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 hover:cursor-pointer" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true">
+        <path d="M373.1 27.5 484.5 138.9c14.7 14.7 14.7 38.6 0 53.3L212.6 464.1l-118 13.1c-19.7 2.2-36.2-14.3-34-34l13.1-118L319.8 27.5c14.7-14.7 38.6-14.7 53.3 0zM338.5 116.3 95.7 359.1l-8.3 74.5 74.5-8.3 242.8-242.8-66.2-66.2z"/>
+      </svg>`;
 
     const delBtn = document.createElement("button");
     delBtn.className = "delete";
     delBtn.title = "Delete";
-    delBtn.innerHTML = `<i class="hover:cursor-pointer fa-solid fa-trash"></i>`;
+    delBtn.setAttribute("aria-label", `Delete "${t.task}"`);
+    delBtn.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 hover:cursor-pointer" viewBox="0 0 448 512" fill="currentColor" aria-hidden="true">
+        <path d="M135.2 17.7C140.5 7.3 151.1 0 162.9 0h122.3c11.8 0 22.4 7.3 27.7 17.7L328 32H432a16 16 0 0 1 0 32h-24l-21.2 372.5A80 80 0 0 1 306.9 512H141.1a80 80 0 0 1-79.9-75.5L40 64H16A16 16 0 0 1 16 32h104l15.2-14.3zM96.3 96l19.6 344.5A48 48 0 0 0 141.1 480h165.8a48 48 0 0 0 45.2-39.5L371.7 96H96.3z"/>
+      </svg>`;
 
     btnWrap.append(editBtn, delBtn);
-
-    li.append(checkbox, textWrap, btnWrap);
+    li.append(checkbox, label, btnWrap);
     el.list.appendChild(li);
   }
 
@@ -161,8 +173,14 @@ function updateStats() {
   }
 }
 
-// celebration confetti when all tasks are completed
+// ---- celebration confetti ----
 function celebrate() {
+  if (
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  )
+    return;
+
   const COUNT = 120;
   for (let i = 0; i < COUNT; i++) {
     const c = document.createElement("div");
@@ -210,7 +228,6 @@ el.form.addEventListener("submit", async (evt) => {
   evt.preventDefault();
   const task = el.taskInput.value.trim();
   const dueDate = el.dueDateInput.value || null;
-
   if (!task) return;
 
   const payload = {
@@ -228,32 +245,35 @@ el.form.addEventListener("submit", async (evt) => {
   }
 });
 
-// toggle / edit / delete handlers
+//list handlers
+
+el.list.addEventListener("change", async (evt) => {
+  if (!evt.target.matches("input.checkbox")) return;
+  const li = evt.target.closest("li");
+  if (!li) return;
+
+  const id = li.dataset.id;
+  const checked = evt.target.checked;
+  try {
+    todos = await API.update({ id, completed: checked });
+    renderTodos(); // re-renders with filled checkbox and line-through text
+  } catch (e) {
+    console.error(e);
+    evt.target.checked = !checked; // revert on failure
+  }
+});
+
+// click for edit/delete buttons
 el.list.addEventListener("click", async (evt) => {
   const li = evt.target.closest("li");
   if (!li) return;
   const id = li.dataset.id;
-
-  // toggle complete
-  if (evt.target.closest("input.checkbox")) {
-  const cb = evt.target.closest("input.checkbox");
-  const checked = cb.checked;
-  try {
-    todos = await API.update({ id, completed: checked }); 
-    renderTodos();
-  } catch (e) {
-    console.error(e);
-    cb.checked = !checked;
-  }
-  return;
-}
 
   // edit
   if (evt.target.closest("button")?.classList.contains("edit")) {
     startInlineEdit(li, id);
     return;
   }
-
   // delete
   if (evt.target.closest("button")?.classList.contains("delete")) {
     try {
@@ -262,7 +282,6 @@ el.list.addEventListener("click", async (evt) => {
     } catch (e) {
       console.error(e);
     }
-    return;
   }
 });
 
@@ -275,80 +294,65 @@ function startInlineEdit(li, id) {
   const metaSmall = li.querySelector("small");
   const btnWrap = li.querySelector(".task-buttons");
   const checkbox = li.querySelector(".checkbox");
-
-  if (!textSpan || !metaSmall || !btnWrap || !checkbox) {
-    console.warn("Expected DOM nodes missing for id", id);
-    return;
-  }
+  if (!textSpan || !metaSmall || !btnWrap || !checkbox) return;
 
   // editors
   const editInput = document.createElement("input");
   editInput.type = "text";
   editInput.value = item.task;
-  editInput.style.width = "100%";
-  editInput.style.borderRadius = "12px";
-  editInput.style.padding = "8px";
-  editInput.style.border = "none";
-  editInput.style.outline = "none";
-  editInput.style.fontSize = "12px";
+  editInput.className =
+    "w-full rounded-xl px-3 py-2 text-white text-sm font-roboto outline-none";
   editInput.style.background = "rgba(255, 126, 183, 0.3)";
-  editInput.style.color = "#fff";
   editInput.style.marginBottom = "4px";
 
   const editDue = document.createElement("input");
   editDue.type = "date";
   editDue.value = formatDateISO(item.due_date);
-  editDue.style.width = "75%";
-  editDue.style.borderRadius = "12px";
-  editDue.style.padding = "8px";
-  editDue.style.border = "none";
-  editDue.style.outline = "none";
-  editDue.style.fontSize = "10px";
+  editDue.className =
+    "w-3/4 rounded-xl px-3 py-2 text-white text-xs font-roboto outline-none";
   editDue.style.background = "rgba(255, 126, 183, 0.3)";
-  editDue.style.color = "#fff";
 
   // save and cancel buttons
   const saveBtn = document.createElement("button");
   saveBtn.className = "edit";
   saveBtn.title = "Save";
-  saveBtn.innerHTML = `<i class="hover:cursor-pointer fa-solid fa-check"></i>`;
+  saveBtn.setAttribute("aria-label", "Save");
+  saveBtn.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 hover:cursor-pointer" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true">
+      <path d="M173.9 439.4 7 272.5c-9.4-9.4-9.4-24.6 0-33.9l22.6-22.6c9.4-9.4 24.6-9.4 33.9 0L192 312.7 448.6 56c9.4-9.4 24.6-9.4 33.9 0L505 78.6c9.4 9.4 9.4 24.6 0 33.9L226.5 439.4c-9.4 9.4-24.6 9.4-33.9 0z"/>
+    </svg>`;
 
   const cancelBtn = document.createElement("button");
   cancelBtn.className = "cancel";
   cancelBtn.title = "Cancel";
-  cancelBtn.innerHTML = `<i class="hover:cursor-pointer fa-solid fa-xmark"></i>`;
+  cancelBtn.setAttribute("aria-label", "Cancel");
+  cancelBtn.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 hover:cursor-pointer" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true">
+      <path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/>
+    </svg>`;
 
   textSpan.replaceWith(editInput);
   metaSmall.replaceWith(editDue);
-
   btnWrap.innerHTML = "";
   btnWrap.append(saveBtn, cancelBtn);
-
   checkbox.disabled = true;
 
   const commit = async () => {
     const newTask = editInput.value.trim();
     const newDue = editDue.value || null;
-
     if (!newTask) {
       editInput.focus();
       return;
     }
     try {
-      todos = await API.update({
-        id,
-        task: newTask,
-        due_date: newDue,
-      });
+      todos = await API.update({ id, task: newTask, due_date: newDue });
       renderTodos();
     } catch (e) {
       console.error(e);
     }
   };
 
-  const revert = () => {
-    renderTodos();
-  };
+  const revert = () => renderTodos();
 
   saveBtn.addEventListener("click", (e) => {
     e.preventDefault();
@@ -376,7 +380,6 @@ async function handleLogout(e) {
   } catch (err) {
     console.error("Logout failed:", err);
   } finally {
-    // fetch follows redirects but won’t navigate the page — do it manually.
     window.location.href = "/login.html?loggedout=1";
   }
 }
@@ -385,9 +388,6 @@ async function handleLogout(e) {
 window.addEventListener("DOMContentLoaded", () => {
   startClock();
   loadAndRender();
-
   const btn = el.logoutBtn || document.getElementById("logout-btn");
   if (btn) btn.addEventListener("click", handleLogout);
 });
-
-

@@ -5,44 +5,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>To-Do List</title>
 
-    <link rel="icon" href="./css/images/favicon.ico" type="image/x-icon" />
+    <meta
+      name="description"
+      content="Personal to-do list. Add, edit, and complete tasks securely with GitHub login."
+    />
 
-    <link rel="stylesheet" href="./css/tailwind.css" />
+    <link rel="icon" href="./images/favicon.ico" type="image/x-icon" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
+     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      rel="preload"
+      as="style"
       href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
-      rel="stylesheet"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+      />
+    </noscript>
+    
+    <link rel="stylesheet" href="./tailwind.css" />
+
     <script src="./js/main.js" defer></script>
   </head>
 
   <body
-    class="min-h-screen bg-[url('/css/images/todoappbackground.png')] bg-cover bg-center flex items-center justify-center font-pixelify text-lg"
+    class="min-h-screen bg-[url('/images/todoappbackground.webp')] bg-cover bg-center flex items-center justify-center font-pixelify text-lg"
   >
     <main class="w-full">
       <div class="w-full flex items-center justify-center px-5">
         <div
           class="relative w-full max-w-md p-8 flex flex-col items-center gap-7 text-white rounded-2xl border-2 border-white/20 backdrop-blur shadow-2xl bg-white/10"
         >
-         <!-- logout -->
+          <!-- logout -->
           <button
             id="logout-btn"
             class="hover:cursor-pointer absolute top-3 right-3 inline-flex items-center justify-center w-9 h-9 rounded-full border-2 border-white/20 bg-white/30 hover:bg-white/40 transition"
             title="Log out"
+            aria-label="Log out"
           >
-            <i class="fa-solid fa-right-from-bracket"></i>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-4 h-4"
+              viewBox="0 0 512 512"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                d="M377 105a24 24 0 0 0-24-24H240a24 24 0 0 0-24 24v66a24 24 0 1 1-48 0v-66a72 72 0 0 1 72-72h113a72 72 0 0 1 72 72v302a72 72 0 0 1-72 72H240a72 72 0 0 1-72-72v-66a24 24 0 1 1 48 0v66a24 24 0 0 0 24 24h113a24 24 0 0 0 24-24z"
+              />
+              <path
+                d="M305 256a24 24 0 0 1-24 24H160l25 25a24 24 0 0 1-34 34l-66-66a24 24 0 0 1 0-34l66-66a24 24 0 1 1 34 34l-25 25h121a24 24 0 0 1 24 24z"
+              />
+            </svg>
           </button>
 
           <h1 class="text-4xl">To-Do List</h1>
 
           <!-- today's date -->
-          <div id="today" class="text-white/100 text-xl"></div>
+          <div id="today" class="text-white/100 text-xl min-h-6"></div>
 
           <!-- progress + count -->
           <div
@@ -54,14 +78,14 @@
                 <div
                   id="progress"
                   class="h-full rounded-2xl transition-[width] duration-300"
-                  style="width:0%; background:#ff7eb7"
+                  style="width: 0%; background: #ff7eb7"
                 ></div>
               </div>
             </div>
             <div
               id="count"
-              class="flex-none flex items-center justify-center w-20 aspect-square text-2xl rounded-full border-2 border-white/20"
-              style="background:#ff7eb7"
+              class="flex-none flex items-center justify-center w-20 aspect-square text-2xl font-roboto rounded-full border-2 border-white/20 text-white font-semibold"
+              style="background: rgba(255, 255, 255, 0.3)"
             >
               0/0
             </div>
@@ -69,24 +93,39 @@
 
           <!-- add task form -->
           <form class="add-task-form flex items-center gap-2">
+            <label for="task-input" class="sr-only">Task</label>
             <input
               type="text"
               id="task-input"
               placeholder="add a new task..."
               class="flex-1 px-3 py-2 rounded-full bg-[rgba(142,104,230,0.25)] text-white placeholder-white/80 outline-none text-sm font-roboto"
             />
+
+            <label for="due-date-input" class="sr-only">Due date</label>
             <input
               type="date"
               id="due-date-input"
               class="hover:cursor-pointer px-3 py-2 rounded-full bg-[rgba(142,104,230,0.25)] text-white outline-none text-sm font-roboto"
             />
+
             <button
               type="submit"
               id="add-task-button"
               class="hover:cursor-pointer inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-white/20 bg-[rgba(142,104,230,0.25)] hover:bg-[rgba(142,104,230,0.4)] hover:scale-110 transition"
-              title="Add"
+              title="Add task"
+              aria-label="Add task"
             >
-              <i class="fa-solid fa-plus"></i>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-4 h-4"
+                viewBox="0 0 448 448"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  d="M256 80v96h96a32 32 0 0 1 0 64h-96v96a32 32 0 0 1-64 0v-96h-96a32 32 0 0 1 0-64h96v-96a32 32 0 0 1 64 0z"
+                />
+              </svg>
             </button>
           </form>
 
@@ -98,8 +137,8 @@
           <!-- no todos in list -->
           <img
             class="empty-image w-[190px] h-auto mx-auto"
-            style="display:none"
-            src="/css/images/empty.png"
+            style="display: none"
+            src="./images/empty.png"
             alt="empty"
           />
         </div>
