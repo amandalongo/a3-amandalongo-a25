@@ -1,136 +1,55 @@
-Assignment 3 - Persistence: Two-tier Web Application with Database, Express server, and CSS template
-===
+## To-Do List
 
-Check out the [CS 4241 Guides](https://github.com/jmcuneo/cs4241-guides) for help with the technologies discussed in this assignment.
+Railway link https://a3-amandalongo-a25-production.up.railway.app/
 
-This assignnment continues where we left off, extending it to use the most popular Node.js server framework (express), 
-a database (mongodb), and a CSS application framework / template of your choice (Boostrap, Material Design, Semantic UI, Pure etc.)
+A clean to-do app with GitHub login: add tasks with due dates, check them off, edit inline, and track progress—all fast and simple.
 
-Baseline Requirements
----
+<img width="1512" height="740" alt="Screenshot 2025-09-24 at 11 15 04 AM" src="https://github.com/user-attachments/assets/0c6e9164-a600-446e-9f6b-9450f46fee6e" />
 
-Your application is required to implement the following functionalities:
+<img width="1512" height="740" alt="Screenshot 2025-09-24 at 11 14 21 AM" src="https://github.com/user-attachments/assets/0b6ea126-25eb-4d44-acac-8fe6c0fcf67f" />
 
-- (15 points) a `Server`, created using Express (no alternatives will be accepted for this assignment)
-- (10 points) a `Results` functionality which shows all data associated with a logged in user (except passwords)
-- (15 points) a `Form/Entry` functionality which allows users to add, modify, and delete data items (must be all three!) associated with their user name / account.
-- Persistent data storage in between server sessions using [mongodb](https://www.mongodb.com/cloud/atlas) (you *must* use mongodb for this assignment). You can use either the [official mongodb node.js library](https://www.npmjs.com/package/mongodb) or use the [Mongoose library](https://www.npmjs.com/package/mongoose), which enables you to define formal schemas for your database. Please be aware that the course staff cannot provide in-depth support for use of Mongoose.  (15 pts.)
-- (10 points) Use of a [CSS framework or template](https://github.com/troxler/awesome-css-frameworks). This should do the bulk of your styling/CSS for you and be appropriate to your application. For example, don't use [NES.css](https://nostalgic-css.github.io/NES.css/) (which is awesome!) unless you're creating a game or some type of retro 80s site.
+- **Goals**:
+   - My goal of this application was more for my use or anyone who would use this todo list for basic assignment to do lists or things I need to get done within a certain time frame, usually within the week. I wanted to be able to use this app for my todo! I wanted to be able to add a due date, a title and the ability to edit and cross out my todos and track how much I have gotten done, kind of like the canvas extension-Tasks for Canvas. I ended up having another goal of being able to scroll through my todo list and only show a couple tasks at a time sorted by priority so it wouldn't be as overwhelming. 
+- **Challenges**:
+  - One of my biggest challenges was definitely deployement for some reason, I had trouble with deploying to Vercel with the Github Oauth and having the callback properly execute. I kept getting a 404 error. I did end up going with Railway at the end of the day. I learned a little bit about Oauth previously in Soft Eng because our lead developer used an Oauth authentication within our application. I think another thing that wasn't necessarily challenging, but took a lot of time, was refactoring to Tailwind. I thought it was going to be a lot easier than I went into it, but it did take awhile and I downloaded the wrong package at first I think
+- **Authentication**:
+    - I used Github Oauth with passport.js because it seemed the easiest to implement condsidering I wouldn't have to create a mock username and password and it was easier to look up how to implement the Github Oauth. 
+- **CSS Framework**:
+    - I used TailwindCSS as my CSS framework because I have had experience using it within Soft Eng last year, and also was the main styling framework we used in my internship over the summer. Both times I have used it, I used it with React, so I felt like using Tailwind within raw HTML was different. I had to reconfigure almost my entire CSS file. But overall I didn't have to have as much styling in the tailwind.css file, it is just being watched through a separate file to make sure all styling renders properly. npx tailwindcss -i ./src/tailwind.css -o ./public/tailwind.css --watch
 
-Your application is required to demonstrate the use of the following concepts:  
-
-HTML:  
-- (5 points) HTML input tags and form fields of various flavors (`<textarea>`, `<input>`, checkboxes, radio buttons, etc.)
-- HTML that can display all data *for a particular authenticated user*. Note that this is different from the last assignnment, which required the display of all data in memory on the server.
-
-Note that it might make sense to have two pages for this assignment, one that handles login / authentication and one that contains the rest of your application. For example, when visiting the home page for the assignment, users could be presented with a login form. After submitting the login form, if the login is successful, they are taken to the main application. If they fail, they are sent back to the login to try again. For this assignment, it is acceptable to simply create new user accounts upon login if none exist; however, you must alert your users to this fact.  
-
-CSS:  
-- CSS styling should primarily be provided by your chosen template/framework. Oftentimes a great deal of care has been put into designing CSS templates; don't override their stylesheets unless you are extremely confident in your graphic design capabilities. The idea is to use CSS templates that give you a professional-looking design aesthetic without requiring you to be a graphic designer yourself.
-
-JavaScript:  
-- At minimum, a small amount of front-end JavaScript to get / fetch data from the server. See the [previous assignment](https://github.com/jmcuneo/a2-shortstack-a25) for reference.
-
-Node.js:  
-- A server using Express and a persistent database (mongodb).
-
-General:  
-- (10 points) Your site should achieve at least 90% on the `Performance`, `Best Practices`, `Accessibility`, and `SEO` tests using Google [Lighthouse](https://developers.google.com/web/tools/lighthouse) (don't worry about the PWA test, and don't worry about scores for mobile devices). Test early and often so that fixing problems doesn't lead to suffering at the end of the assignment. 
-
-Deliverables
----
-
-Do the following to complete this assignment:
-
-1. Implement your project with the above requirements. I'd begin by converting your A2 assignment. First, change the server to use express. Then, modify the server to use mongodb instead of storing data locally. Last but not least, implement user accounts and login. User accounts and login is often the hardest part of this assignment, so budget your time accordingly.
-2. If you developed your project locally, deploy your project to Render (unless completing the alternative server technical acheivement described below), and fill in the appropriate fields in your package.json file.
-3. Test your project to make sure that when someone goes to your main page on Render (or an alternative server), it displays correctly.
-4. Ensure that your project has the proper naming scheme `a3-FirstnameLastname` so we can find it.
-5. Fork this repository and modify the README to the specifications below.
-6. Create and submit a Pull Request to the original repo. Name the pull request using the following template: `a3-FirstnameLastname`.
-
-Acheivements
----
-
-Below are suggested technical and design achievements. You can use these to help boost your grade up to an A and customize the assignment to your personal interests, for a maximum twenty additional points and a maximum grade of a 100%. These are recommended acheivements, but feel free to create/implement your own... just make sure you thoroughly describe what you did in your README, why it was challenging, and how many points you think the achievement should be worth. ALL ACHIEVEMENTS MUST BE DESCRIBED IN YOUR README IN ORDER TO GET CREDIT FOR THEM.
-
-*Technical*
-- (10 points) Implement OAuth authentication, perhaps with a library like [passport.js](http://www.passportjs.org/). *You must either use Github authenticaion or provide a username/password to access a dummy account*. Course staff cannot be expected, for example, to have a personal Facebook, Google, or Twitter account to use when grading this assignment. Please contact the course staff if you have any questions about this. THIS IS THE HARDEST ACHEIVEMENT OFFERED IN WEBWARE. You have been warned!  
-- (5 points) Instead of Render, host your site on a different service. Find a service that is reputable and has a free tier. Post your findings on Slack in the #assignment3 channel. DO NOT feel compelled to purchase a paid tier from any service, although if you already have one, you are welcome to use it. Make sure to describe this a bit in your README. What was better about using the service you chose as compared to Render? What (if anything) was worse? 
-- (5 points) Get 100% (not 98%, not 99%, but 100%) in all four lighthouse tests required for this assignment.  
-
-*Design/UX*
-- (10 points) Make your site accessible using the [resources and hints available from the W3C](https://www.w3.org/WAI/). Implement/follow twelve tips from their [tips for writing](https://www.w3.org/WAI/tips/writing/), [tips for designing](https://www.w3.org/WAI/tips/designing/), and [tips for development](https://www.w3.org/WAI/tips/developing/). *Note that all twelve must require active work on your part*. For example, even though your page will most likely not have a captcha, you don't get this as one of your twelve tips to follow because you're effectively 
-getting it "for free" without having to actively change anything about your site. Contact the course staff if you have any questions about what qualifies and doesn't qualify in this regard.
-List each tip that you followed and describe what you did to follow it in your site.
-- (5 points) Describe how your site uses the CRAP principles in the Non-Designer's Design Book readings. Which element received the most emphasis (contrast) on each page? How did you use proximity to organize the visual information on your page? What design elements (colors, fonts, layouts, etc.) did you use repeatedly throughout your site? How did you use alignment to organize information and/or increase contrast for particular elements. Write a paragraph of at least 125 words *for each of four principles* (four paragraphs, 500 words in total). 
-
-
-FAQ
----
-**Q: Am I required modify my A2 submission for this assignment?**
-
-No. If you want to start fresh for A3, you are welcome to do so. The option to start with A2 is simply there as a convenience for you.
-
-**Q: Which CSS framework should I use? How do I use it?**
-
-This is for you to figure out. While we do require Express and MongoDB for this assignment, we do not require a specific CSS framework, so we are not going to be discussing a specific one. You will be responsible for choosing a CSS framework and learning how to use it.
-
-**Q: How do I keep my .env file out of my git repo?**
-
-Create a .gitignore file on your local machine and list your .env file in it. Note that while your .env file should NOT appear in your repo, you will still want to [add it to your Render project](https://render.com/docs/configure-environment-variables) so that your website runs successfully.
-
-**Q: I'm confused about how user accounts work for this assignment.**
-
-For the base requirements (discounting the achievements), it should follow this logic:
-
-1. If the user logs in and the account does not exist, create the account and inform the user the account has been created.
-2. If the user logs in and the account exists but the password is incorrect, inform the user.
-3. If the user logs in, the account exists, and the password is correct, then take the user to the page that shows the data specific to the user.
-
-Note that implementing some of the technical achievements may override this requirement, which is fine.
-
-**Q: I'm getting a syntax error when trying to connect to MongoDB using the code in the tutorial.**
-
-Your version of Node may be outdated. Check out [this link](https://stackoverflow.com/questions/77749884/session-options-session-syntaxerror-unexpected-token-mongoose-give-a) for more information.
-
-**Q: Do I have to handle multiple user accounts?**
-
-No. You only need one dummy account UNLESS you are doing the GitHub login technical achievement. Make sure you mention in your README how the user should log in!
-
-**Q: If we use OAuth for logging in, do we still need the same pattern of behavior from the website when logging in (as described above)?**
-
-Yes, insofar as the logged in user should still be taken to a page with the user's data, the login should fail for the incorrect password, and a new account should be created if the username is unrecognized.
-
-Note that if you are doing OAuth, this last part might be difficult (especially if you are doing GitHub authentication). If that's the case, then the user should be taken to a page where they can create an account for your site.
-
-**Q: Does "HTML input tags and form fields of various flavors" mean that we need to use multiple different kinds of inputs, or does it mean that we just need to use some form of input?**
-
-You should have at least two different input types for this assignment. The purpose is to show your understanding beyond the simple `input` type you saw in A2.
-
-**Q: Am I allowed to use other libraries/frameworks/etc. in this assignment?**
-
-Yes, so long as those are IN ADDITION TO Express, MongoDB, and a CSS framework of your choice. Describe in your README any additional libraries or frameworks you used for this assignment. Also remember that the staff might not be familiar with these, so we may be unable to help you if you run into technical problems.
-
-
-Sample Readme (delete the above when you're ready to submit, and modify the below so with your links and descriptions)
----
-
-## Your Web Application Title
-
-Your Render (or alternative server) link e.g. http://a3-joshua-cuneo.render.me
-
-Include a very brief summary of your project here. Images are encouraged, along with concise, high-level text. Be sure to include:
-
-- the goal of the application
-- challenges you faced in realizing the application
-- what authentication strategy you chose to use and why (choosing one because it seemed the easiest to implement is perfectly acceptable)
-- what CSS framework you used and why
-  - include any modifications to the CSS framework you made via custom CSS you authored
-- a list of Express middleware packages you used and a short (one sentence) summary of what each one does. If you use a custom function, please add a little more detail about what it does.
+- **Express Middleware**: Here is a list of all of the middleware I used and what their purpose was
+    - express.json() — Parses JSON request bodies and assigns the result to req.body.
+    - express.static(path.join(__dirname, 'public')) — Serves static files (HTML/CSS/JS/images) from the public/ directory.
+    - session(...) (from express-session) — Creates/reads a signed session cookie to persist user logins across requests.
+    - passport.initialize() — Hooks Passport into the Express request cycle.
+    - passport.session() — Restores the logged-in user from the session using Passport’s serialize/deserialize.
+    - passport.authenticate('github') — Route middleware that starts/handles the GitHub OAuth flow and attaches the user on success.
+    - router.use(ensureAuthed) — Custom guard that returns 401 if req.isAuthenticated() is false; otherwise lets /todos requests proceed.
+    - Final 404 handler (app.use((_req, res) => res.status(404).send('404 Not Found'))) — Terminal middleware that catches unmatched routes and responds with 404.
 
 ## Technical Achievements
-- **Tech Achievement 1**: I used OAuth authentication via the GitHub strategy
+- **Tech Achievement 1**: I used OAuth authentication via the GitHub strategy because I thought it was the easiest and most simplistic way to implement an Oauth Authentication. I explained more about my experience with it above^^
+- **Tech Achievement 2**: I used Railway for my deployment and I honestly had the most trouble with my deployment. I think the biggest thing with railway is that it wasn't as intuitive as render or other deoployment sites. I will say the pros of it is that it lets you know when deployment is successful and if it isnt, it has a easy debug log to manage. The other pro is that it automatically and quickly redeploys when you push a change to you github! Which that I thought was really cool. 
+- **Tech Achievement 3**: Here is an image of my four lighthouse 100's
+<img width="1512" height="749" alt="Lighthouse Image" src="https://github.com/user-attachments/assets/27cd4065-9185-4623-a81d-d16be1912c13" />
 
 ### Design/Evaluation Achievements
-- **Design Achievement 1**: I followed the following tips from the W3C Web Accessibility Initiative...
+- **Design Achievement 1**: I followed the following tips from the W3C Web Accessibility Initiative and here is each tip that I followed
+1. Use semantic landmarks : Wrapped the app in <main> and used <form>, <ul>, and <li> for structure.
+2. Text alternatives for icons : Replaced decorative icons with inline SVGs and added clear names (e.g., aria-label="Log out").
+3. Label form fields : Added labels for the task and due date (screen-reader–only).
+4. Label each checkbox : Each checkbox gets a unique id and a matching <label for="..."> using the task text.
+5. Visible keyboard focus : Added a clear :focus-visible outline so keyboard users can see focus.
+6. Respect reduced motion : Confetti animation is disabled when prefers-reduced-motion is enabled.
+7. Announce status updates : Login messages use aria-live="polite" so errors/success are announced.
+8. Larger hit targets : Made interactive controls roughly 44×44px for easier tapping.
+9. Improve color contrast : Ensured high-contrast text/badges; can switch to solid backgrounds if needed.
+10. Sync control state : Keep aria-checked in sync with the checkbox’s checked property.
+11. Descriptive button names : Edit/Delete buttons include the task name in their aria-label (e.g., “Delete ‘Buy milk’”).
+12. Helpful page metadata : Added a concise <meta name="description"> to describe the page.
+    
+- **Design Achievement 2**: CRAP
+    - **Contrast** We use strong contrast to make the right things pop. The bold “To-Do List” title stands out first, then the progress bar and the round count badge. White text sits on a darker, blurred card so it’s easy to read over the photo background. Buttons (Add, Logout, Edit, Delete) have clear shapes, borders, and hover states so they look clickable. The progress bar uses a bright pink fill against a muted track, so progress is obvious at a glance.
+    - **Repetition** The app repeats the same look and feel so everything feels connected. We use the same two fonts (Pixelify Sans for headings, Roboto for UI text), the same rounded corners, soft shadows, and glassy borders. Buttons share the same padding and hover effects. The brand pink appears in the progress bar, the count badge, and completed checkmarks to signal “done.” Labels and focus styles are applied the same way across inputs.
+    - **Alignment** A simple, centered layout keeps things neat. Inside the main card, items line up on one vertical column. The title, date, and progress block stack cleanly; the progress bar sits right under its heading. Each task row lines up its checkbox, text, and action buttons on one horizontal line. The logout button sits in the top-right corner of the card, easy to find without interrupting the main flow.
+    - **Proximity** Related pieces are grouped; unrelated ones are spaced apart. The progress heading, bar, and count badge live together as one section. The add-task input, date picker, and add button sit close to show they’re one action. Each task keeps its checkbox, text, and edit/delete buttons tight, so it’s clear which actions belong to which task. Larger gaps separate major sections so the page doesn’t feel crowded.
