@@ -35,7 +35,8 @@ A clean to-do app with GitHub login: add tasks with due dates, check them off, e
 
 ### Design/Evaluation Achievements
 - **Design Achievement 1**: I followed the following tips from the W3C Web Accessibility Initiative and here is each tip that I followed
-- Use semantic landmarks : Wrapped the app in <main> and used <form>, <ul>, and <li> for structure.
+
+- Use semantic landmarks : Wrapped the app in <main> and used <form> <ul> and <li> for structure.
 - Text alternatives for icons : Replaced decorative icons with inline SVGs and added clear names (e.g., aria-label="Log out").
 - Label form fields : Added labels for the task and due date (screen-reader–only).
 - Label each checkbox : Each checkbox gets a unique id and a matching <label for="..."> using the task text.
